@@ -23,10 +23,15 @@
       border-color: #007bff;
       padding: 0.375rem 0.75rem;
     }
+    .btn{
+      cursor: pointer;
+    }
   </style>
 </head>
 <body>
 <form action="/user/update" method="POST">
+  <input type="hidden" name="_method" value="PUT">
+  <input type="hidden" name="id" value="<c:out value="${user.id}" />">
   <div class="mb-3" style="margin-bottom: 1rem;">
     <label for="name" class="form-label">Name</label>
     <input type="text" class="form-control" id="name" value="<c:out value="${user.name}" />" name="name" required style="width: 50%; padding: 0.375rem 0.75rem;">
@@ -43,8 +48,9 @@
     <label for="adresse" class="form-label">Address</label>
     <input type="text" class="form-control" id="adresse" value="<c:out value="${user.adresse}" />" name="adresse" required style="width: 50%; padding: 0.375rem 0.75rem;">
   </div>
-  <div class="mb-3 form-check" style="margin-bottom: 1rem;">
-    <input type="checkbox" class="form-check-input" id="manager" name="manager" <c:if test="${user.manager}">checked</c:if>>
+  <div class="mb-3 form-check">
+    <input type="checkbox" class="form-check-input" id="manager" name="manager"
+    ${user.isManager ? 'checked' : ''}>
     <label class="form-check-label" for="manager" style="margin-left: 0.3rem;">Is Manager</label>
   </div>
   <button type="submit" class="btn btn-primary" style="background-color: #007bff; border-color: #007bff; padding: 0.375rem 0.75rem;">Update</button>

@@ -10,6 +10,7 @@ import jakarta.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 @WebServlet(name = "UserService", value = "/UserService")
 public class UserService extends HttpServlet {
@@ -47,25 +48,11 @@ public class UserService extends HttpServlet {
         return new User(name, email, password, adresse, isManager);
     }
 
+
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws IOException {
         User user = extractUserFromRequest(request);
         createUser(user);
-        response.sendRedirect(request.getContextPath() + "/user/display-All-Users");
-    }
-
-    @Override
-    protected void doPut(HttpServletRequest request, HttpServletResponse response) throws IOException {
-        Long id = Long.parseLong(request.getParameter("id"));
-        User user = userRepository.findUserById(id);
-        if (user != null) {
-            user.setName(request.getParameter("name"));
-            user.setEmail(request.getParameter("email"));
-            user.setPassword(request.getParameter("password"));
-            user.setAdresse(request.getParameter("adresse"));
-            user.setManager(request.getParameter("manager") != null);
-            updateUser(user);
-        }
         response.sendRedirect(request.getContextPath() + "/user/display-All-Users");
     }
 

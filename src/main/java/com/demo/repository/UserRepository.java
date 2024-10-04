@@ -9,6 +9,7 @@ import jakarta.persistence.EntityTransaction;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 import java.util.logging.Level;
 import java.util.logging.Logger;
 
@@ -47,7 +48,7 @@ public class UserRepository implements UserInterface {
             if (transaction.isActive()) {
                 transaction.rollback();
             }
-            LOGGER.log(Level.SEVERE, "Error updating user: {0}", e.getMessage());
+            LOGGER.log(Level.SEVERE, "Error updating user", e);
             throw new RuntimeException("Failed to update user", e);
         } finally {
             em.close();
@@ -93,15 +94,10 @@ public class UserRepository implements UserInterface {
             em.close();
         }
     }
-    public User findUserById(Long id) {
+    public Optional<User> findUserById(Long id) {
         EntityManager em = JPAUtil.getEntityManager();
         try {
-            return em.createQuery("SELECT u FROM User u WHERE u.id = :id", User.class)
-                    .setParameter("id", id)
-                    .getSingleResult();
-        } catch (Exception e) {
-            LOGGER.log(Level.SEVERE, "Error fetching user: {0}", e.getMessage());
-            return null;
+            return Optional.ofNullable(em.find(User.class, id));
         } finally {
             em.close();
         }
@@ -116,6 +112,7 @@ public Map<String, Object> findUserByEmail(String email) {
                 .getSingleResult();
         if (user != null) {
             Map<String, Object> userInfo = new HashMap<>();
+            userInfo.put("id", user.getId());
             userInfo.put("name", user.getName());
             userInfo.put("email", user.getEmail());
             userInfo.put("password", user.getPassword());

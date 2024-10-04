@@ -11,15 +11,18 @@ import jakarta.servlet.http.HttpServletResponse;
 
 import java.io.IOException;
 import java.util.Map;
+import java.util.Optional;
 
 @WebServlet(name = "user", value = "/user/*")
 public class UserRoute extends HttpServlet {
     private UserService userService;
+    private UserRepository userRepository;
 
     @Override
     public void init() throws ServletException {
         super.init();
         userService = new UserService();
+        userRepository = new UserRepository();
     }
     @Override
     protected void doGet(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
@@ -41,6 +44,11 @@ public class UserRoute extends HttpServlet {
                     request.setAttribute("user", user);
                     request.getRequestDispatcher("/UpdateUser.jsp").forward(request, response);
                     break;
+                case "/delete-user":
+                    String emailToDelete = request.getParameter("email");
+                    userRepository.delete(emailToDelete);
+                    response.sendRedirect(request.getContextPath() + "/user/display-All-Users");
+                    break;
                 default:
                     response.sendError(HttpServletResponse.SC_NOT_FOUND);
             }
@@ -54,16 +62,49 @@ public class UserRoute extends HttpServlet {
     @Override
     protected void doPost(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
         String pathInfo = request.getPathInfo();
-        if ("/new".equals(pathInfo)) {
-            request.getRequestDispatcher("/UserService").forward(request, response);
+        switch (pathInfo) {
+            case "/new":
+                request.getRequestDispatcher("/UserService").forward(request, response);
+                break;
+            case "/update":
+                String method = request.getParameter("_method");
+                if ("PUT".equalsIgnoreCase(method)) {
+                    doPut(request, response);
+                }
         }
     }
 
     @Override
     protected void doPut(HttpServletRequest request, HttpServletResponse response) throws ServletException, IOException {
-        String pathInfo = request.getPathInfo();
-        if ("/update".equals(pathInfo)) {
-            request.getRequestDispatcher("/UserService").forward(request, response);
+        Long id = Long.parseLong(request.getParameter("id"));
+        try {
+            Optional<User> userOptional = userRepository.findUserById(id);
+
+            if (userOptional.isPresent()) {
+                User user = userOptional.get();
+                updateUserFromRequest(user, request);
+                userRepository.update(user);
+                response.setStatus(HttpServletResponse.SC_OK);
+            } else {
+                response.sendError(HttpServletResponse.SC_NOT_FOUND, "User not found");
+                return;
+            }
+        } catch (NumberFormatException e) {
+            response.sendError(HttpServletResponse.SC_BAD_REQUEST, "Invalid user ID");
+            return;
+        } catch (Exception e) {
+            response.sendError(HttpServletResponse.SC_INTERNAL_SERVER_ERROR, "Error updating user");
+            return;
         }
+        response.sendRedirect(request.getContextPath() + "/user/display-All-Users");
+
+    }
+
+    private void updateUserFromRequest(User user, HttpServletRequest request) {
+        user.setName(request.getParameter("name"));
+        user.setEmail(request.getParameter("email"));
+        user.setPassword(request.getParameter("password"));
+        user.setAdresse(request.getParameter("adresse"));
+        user.setManager(Boolean.parseBoolean(request.getParameter("manager")));
     }
 }
